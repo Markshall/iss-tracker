@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Live ISS tracker</title>
+		<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+		<link href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" type="text/css">
+		<style>
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				padding: 0;
+				font-family: Arial;
+			}
+
+			#map {
+				position: absolute;
+				top: 0;
+				bottom: 0;
+				width: 100%;
+			}
+
+			#stats {
+				position: fixed;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				z-index: 10;
+				width: 100%;
+				padding: 1rem;
+				background-color: rgba(255, 255, 255, .8);
+				backdrop-filter: blur(10px);
+				display: flex;
+				justify-content: center;
+				flex-wrap: wrap;
+				gap: 1rem;
+			}
+
+			.stat {
+				text-align: center;
+				border: 1px solid rgba(31, 31, 31, .3);
+				padding: .25rem;
+				flex-grow: 1;
+			}
+
+			.stat__title {
+				text-transform: uppercase;
+				font-weight: bold;
+				margin: 0 0 .3rem;
+			}
+		</style>
+	</head>
+
+	<body>
+		<script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
+		<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+
+		<div id="map"></div>
+
+		<div id="stats">
+			<div class="stat">
+				<h3 class="stat__title">Lat</h3>
+				<div class="stat__value" id="lat"></div>
+			</div>
+			<div class="stat">
+				<h3 class="stat__title">Lng</h3>
+				<div class="stat__value" id="lng"></div>
+			</div>
+			<div class="stat">
+				<h3 class="stat__title">Velocity</h3>
+				<div class="stat__value" id="velocity"></div>
+			</div>
+		</div>
+		
+		<script>
+			const issCoords = async () => {
+				const req = await fetch('https://api.wheretheiss.at/v1/satellites/25544?units=miles');
+
+				const res = await req.json();
+
+				const { latitude, longitude, velocity } = res;
+
+				const pos = [longitude, latitude]
+
+				map.jumpTo({
+					center: pos,
+					zoom: 1.5
+				})
+
+				marker.setLngLat(pos)
+
+				document.getElementById('lat').innerText = latitude
+				document.getElementById('lng').innerText = longitude
+				document.getElementById('velocity').innerText = velocity.toFixed(2) + ' mph'
+			}
+
+			setInterval(issCoords, 5000);
+
+			mapboxgl.accessToken = 'pk.eyJ1IjoibWFya3NoYWxsIiwiYSI6ImNqd2dkYnBsMjAwZzc0OXBhZ3B5aTZkcm8ifQ.cw4HrjlbijXSBGjfmcwz-g';
+			const map = new mapboxgl.Map({
+				container: 'map',
+				style: 'mapbox://styles/mapbox/streets-v11',
+				zoom: 1.5
+			});
+
+			const marker = new mapboxgl.Marker()
+				.setLngLat([-79.4512, 43.6568])
+				.addTo(map)
+
+			issCoords();
+		</script>
+	</body>
+</html>
